@@ -3,6 +3,7 @@ package de.htwg_konstanz.moco.meetable;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.support.v4.content.LocalBroadcastManager;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -12,7 +13,14 @@ import android.content.Context;
  */
 public class GpsPullService extends IntentService {
 
+    //constants for status report
+    public static final String  STATUS_REPORT_ACTION = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_ACTION";
+    public static final String STATUS_REPORT_LATITUDE = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_LATITUDE";
+    public static final String STATUS_REPORT_LONGITUDE = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_LONGITUDE";
+
     private static final String ACTION_GET_LOCATION = "de.htwg_konstanz.moco.meetable.action.ACTION_GET_LOCATION";
+
+    private double latitude, longitude;
 
     public GpsPullService() {
         super("GpsPullService");
@@ -48,7 +56,20 @@ public class GpsPullService extends IntentService {
      * Handle action GetLocation in the provided background thread
      */
     private void handleActionGetLocation() {
-        // TODO: Handle action Foo
-        throw new UnsupportedOperationException("Not yet implemented");
+        // TODO: Get actual data from server
+        if (true) throw new UnsupportedOperationException("Not yet implemented");
+
+        reportStatus();
+
+
     }
+
+    private void reportStatus(){
+        Intent localIntent = new Intent(STATUS_REPORT_ACTION);
+        localIntent.putExtra(STATUS_REPORT_LATITUDE,latitude);
+        localIntent.putExtra(STATUS_REPORT_LONGITUDE,longitude);
+
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+    }
+
 }
