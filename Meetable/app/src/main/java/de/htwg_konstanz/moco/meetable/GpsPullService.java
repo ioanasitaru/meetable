@@ -35,8 +35,6 @@ public class GpsPullService extends IntentService {
     public static void startActionGetLocation(Context context) {
         Intent intent = new Intent(context, GpsPullService.class);
         intent.setAction(ACTION_GET_LOCATION);
-        //intent.putExtra(EXTRA_PARAM1, param1);
-        //intent.putExtra(EXTRA_PARAM2, param2);
         context.startService(intent);
     }
 
@@ -64,6 +62,11 @@ public class GpsPullService extends IntentService {
 
     }
 
+    /**
+     * This approach used for reporting status:
+     * https://developer.android.com/training/run-background-service/report-status.html
+     * "Receive Status Broadcasts from an IntentService" chapter is important for activity
+     */
     private void reportStatus(){
         Intent localIntent = new Intent(STATUS_REPORT_ACTION);
         localIntent.putExtra(STATUS_REPORT_LATITUDE,latitude);
