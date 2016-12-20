@@ -11,6 +11,7 @@ import android.location.LocationManager;
 import android.location.LocationProvider;
 import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
 
 import org.json.JSONArray;
@@ -46,10 +47,8 @@ public class GpsPullService extends IntentService {
 
     //database access
     private static final String DATABASE_ACCESS = "https://meetable2.herokuapp.com/";
-    private static final String DATABASE_GET_LOCATION_METHOD = "getGPS/";
+    private static final String DATABASE_GET_LOCATION_METHOD = "getGPS";
     private static final int DATABASE_AREA_IN_KM = 1;
-
-    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
     private class Position {
 
@@ -83,8 +82,7 @@ public class GpsPullService extends IntentService {
         @Override
         public void onLocationChanged(Location location) {
             if (location !=null) {
-                myPosition.setLongitude(location.getLongitude());
-                myPosition.setLatitude(location.getLatitude());
+                setMyLocation(location);
             }
         }
 
@@ -112,6 +110,7 @@ public class GpsPullService extends IntentService {
      * @see IntentService
      */
     public static void startActionGetLocation(Context context) {
+        System.out.println("Inside helper method");
         Intent intent = new Intent(context, GpsPullService.class);
         intent.setAction(ACTION_GET_LOCATION);
         context.startService(intent);
@@ -120,6 +119,7 @@ public class GpsPullService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
+        System.out.println("Inside service");
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_GET_LOCATION.equals(action)) {
@@ -150,8 +150,11 @@ public class GpsPullService extends IntentService {
 
     private void determineMyPosition() {
 
+        LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
         //permission check
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
+                ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             reportFail();
             return;
         }
@@ -161,12 +164,12 @@ public class GpsPullService extends IntentService {
         } else {
             LocationListener locationListener = new MyLocationListener();
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 600000, 50, locationListener);
+            Location locationx = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
         }
     }
 
     private void setMyLocation(Location location){
-        myPosition.setLatitude(location.getLatitude());
-        myPosition.setLongitude(location.getLongitude());
+        myPosition = new Position(location.getLatitude(),location.getLongitude());
     }
 
     private String accessDatabase() {
@@ -205,6 +208,7 @@ public class GpsPullService extends IntentService {
         JSONArray array = new JSONArray(jsonString);
         JSONArray internalArray = array.getJSONArray(0);
         JSONObject object = internalArray.getJSONObject(0);
+        otherPhonePosition = new Position(0,0);
         otherPhonePosition.setLatitude(object.getDouble("latitude"));
         otherPhonePosition.setLongitude(object.getDouble("longitude"));
     }
@@ -219,6 +223,7 @@ public class GpsPullService extends IntentService {
         localIntent.putExtra(STATUS_REPORT_LATITUDE, myPosition.getLatitude());
         localIntent.putExtra(STATUS_REPORT_LONGITUDE, myPosition.getLongitude());
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+        System.out.println("Lat:" + otherPhonePosition.getLatitude() + "\nLon: " + otherPhonePosition.getLongitude());
     }
 
     private void reportFail(){
