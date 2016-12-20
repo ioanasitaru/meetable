@@ -56,10 +56,7 @@ public class GpsPullService extends IntentService {
     private void handleActionGetLocation() {
         // TODO: Get actual data from server
         if (true) throw new UnsupportedOperationException("Not yet implemented");
-
         reportStatus();
-
-
     }
 
     /**
