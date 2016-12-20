@@ -16,6 +16,8 @@
             </intent-filter>
         </activity>
 
+        <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+
         <service
             android:name=".GpsPullService"
             android:exported="false"></service>
