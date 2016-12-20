@@ -1,9 +1,32 @@
 package de.htwg_konstanz.moco.meetable;
 
+import android.Manifest;
 import android.app.IntentService;
 import android.content.Intent;
 import android.content.Context;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
+import android.location.LocationProvider;
+import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.security.Permission;
+
+import javax.net.ssl.HttpsURLConnection;
 
 /**
  * An {@link IntentService} subclass for handling asynchronous task requests in
@@ -14,13 +37,69 @@ import android.support.v4.content.LocalBroadcastManager;
 public class GpsPullService extends IntentService {
 
     //constants for status report
-    public static final String  STATUS_REPORT_ACTION = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_ACTION";
+    public static final String STATUS_REPORT_ACTION = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_ACTION";
     public static final String STATUS_REPORT_LATITUDE = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_LATITUDE";
     public static final String STATUS_REPORT_LONGITUDE = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_LONGITUDE";
 
+    //constant for action intent
     private static final String ACTION_GET_LOCATION = "de.htwg_konstanz.moco.meetable.action.ACTION_GET_LOCATION";
 
-    private double latitude, longitude;
+    //database access
+    private static final String DATABASE_ACCESS = "https://meetable2.herokuapp.com/";
+    private static final String DATABASE_GET_LOCATION_METHOD = "getGPS/";
+    private static final int DATABASE_AREA_IN_KM = 1;
+
+    LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+
+    private class Position {
+
+        public Position(double latitude, double longitude) {
+            this.latitude = latitude;
+            this.longitude = longitude;
+        }
+
+        private double latitude, longitude;
+
+
+        public double getLatitude() {
+            return latitude;
+        }
+
+        public void setLatitude(double latitude) {
+            this.latitude = latitude;
+        }
+
+        public double getLongitude() {
+            return longitude;
+        }
+
+        public void setLongitude(double longitude) {
+            this.longitude = longitude;
+        }
+    }
+
+    private class MyLocationListener implements LocationListener {
+
+        @Override
+        public void onLocationChanged(Location location) {
+            if (location !=null) {
+                myPosition.setLongitude(location.getLongitude());
+                myPosition.setLatitude(location.getLatitude());
+            }
+        }
+
+        //required by interface
+        @Override
+        public void onStatusChanged(String s, int i, Bundle bundle) {}
+        @Override
+        public void onProviderEnabled(String s) {}
+        @Override
+        public void onProviderDisabled(String s) {}
+    }
+
+    Position myPosition;
+    Position otherPhonePosition;
+
 
     public GpsPullService() {
         super("GpsPullService");
@@ -54,9 +133,80 @@ public class GpsPullService extends IntentService {
      * Handle action GetLocation in the provided background thread
      */
     private void handleActionGetLocation() {
-        // TODO: Get actual data from server
-        if (true) throw new UnsupportedOperationException("Not yet implemented");
+        determineMyPosition();
+        String jsonString = accessDatabase(); //could be null, deal with it
+        if (jsonString == null){
+            reportFail();
+            return;
+        }
+        try {
+            parseJson(jsonString);
+        } catch (JSONException ex){
+            reportFail();
+            return;
+        }
         reportStatus();
+    }
+
+    private void determineMyPosition() {
+
+        //permission check
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            reportFail();
+            return;
+        }
+        Location location = locationManager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
+        if(location != null){
+            setMyLocation(location);
+        } else {
+            LocationListener locationListener = new MyLocationListener();
+            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 600000, 50, locationListener);
+        }
+    }
+
+    private void setMyLocation(Location location){
+        myPosition.setLatitude(location.getLatitude());
+        myPosition.setLongitude(location.getLongitude());
+    }
+
+    private String accessDatabase() {
+        URL accessUrl = composeDatabaseAccessUrl();
+        try{
+            HttpsURLConnection urlConnection = (HttpsURLConnection) accessUrl.openConnection();
+            InputStream inputStream = urlConnection.getInputStream();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
+            StringBuilder result = new StringBuilder();
+            String line;
+            while((line = reader.readLine()) != null) {
+                result.append(line);
+            }
+            return result.toString();
+        } catch (IOException ex) {
+            return null;
+        }
+
+
+    }
+
+    private URL composeDatabaseAccessUrl(){
+        String url = DATABASE_ACCESS +
+                    DATABASE_GET_LOCATION_METHOD +
+                    "/" + myPosition.getLatitude() +
+                    "/" + myPosition.getLongitude() +
+                    "/" + DATABASE_AREA_IN_KM;
+        try {
+            return new URL(url);
+        } catch (MalformedURLException ex) {
+            return null;
+        }
+    }
+
+    private void parseJson(String jsonString) throws JSONException {
+        JSONArray array = new JSONArray(jsonString);
+        JSONArray internalArray = array.getJSONArray(0);
+        JSONObject object = internalArray.getJSONObject(0);
+        otherPhonePosition.setLatitude(object.getDouble("latitude"));
+        otherPhonePosition.setLongitude(object.getDouble("longitude"));
     }
 
     /**
@@ -64,12 +214,14 @@ public class GpsPullService extends IntentService {
      * https://developer.android.com/training/run-background-service/report-status.html
      * "Receive Status Broadcasts from an IntentService" chapter is important for activity
      */
-    private void reportStatus(){
+    private void reportStatus() {
         Intent localIntent = new Intent(STATUS_REPORT_ACTION);
-        localIntent.putExtra(STATUS_REPORT_LATITUDE,latitude);
-        localIntent.putExtra(STATUS_REPORT_LONGITUDE,longitude);
-
+        localIntent.putExtra(STATUS_REPORT_LATITUDE, myPosition.getLatitude());
+        localIntent.putExtra(STATUS_REPORT_LONGITUDE, myPosition.getLongitude());
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
     }
 
+    private void reportFail(){
+        //TODO: report failure
+    }
 }
