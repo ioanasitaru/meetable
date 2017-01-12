@@ -41,6 +41,7 @@ public class GpsPullService extends IntentService {
     public static final String STATUS_REPORT_ACTION = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_ACTION";
     public static final String STATUS_REPORT_LATITUDE = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_LATITUDE";
     public static final String STATUS_REPORT_LONGITUDE = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_LONGITUDE";
+    public static final String STATUS_REPORT_ACTION_FAIL = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_ACTION_FAIL";
 
     //constant for action intent
     private static final String ACTION_GET_LOCATION = "de.htwg_konstanz.moco.meetable.action.ACTION_GET_LOCATION";
@@ -227,6 +228,8 @@ public class GpsPullService extends IntentService {
     }
 
     private void reportFail(){
-        //TODO: report failure
+        Intent localIntent = new Intent(STATUS_REPORT_ACTION_FAIL);
+        LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
+        System.out.println(STATUS_REPORT_ACTION_FAIL + ": Getlocation failed");
     }
 }
