@@ -1,0 +1,42 @@
+{
+  "project_info": {
+    "project_number": "135804794414",
+    "firebase_url": "https://chatapp-a4d6d.firebaseio.com",
+    "project_id": "chatapp-a4d6d",
+    "storage_bucket": "chatapp-a4d6d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:135804794414:android:4a7e4c11cb301ace",
+        "android_client_info": {
+          "package_name": "com.example.andreea.chatapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "135804794414-aakgopgcu9ecat2hhm61742cinj82317.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAKp61G7RmY5ULncle73b_TA0nC8CbxzBI"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
