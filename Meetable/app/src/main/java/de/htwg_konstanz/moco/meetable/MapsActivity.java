@@ -12,6 +12,7 @@ import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -21,6 +22,11 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import java.util.Arrays;
+
+
+/**
+ * @author peterbencik
+ */
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback {
 
@@ -40,12 +46,12 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 lon = intent.getDoubleExtra(GpsPullService.STATUS_REPORT_LONGITUDE,Double.POSITIVE_INFINITY);
 
                 Log.i(TAG, "Friend found at:\nLatitude: " + lat + "\nLongitude: " +lon + "on refresh");
-
+                //ask if available
                 placeMarker(lat,lon);
 
             } else if (intent.getAction().equals(GpsPullService.STATUS_REPORT_ACTION_FAIL)){
                 Log.i(TAG, "No friends found on refresh");
-                noFriendsAvailableNotification();
+                noFriendsAvailableToast();
             }
         }
     };
@@ -144,13 +150,20 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             mMap.addMarker(new MarkerOptions().position(friend).title("Your friend"));
         } else {
             Log.w(TAG,"Bad data in the database: Lat: " +lat + " ,Lon: " + lon);
-            noFriendsAvailableNotification();
+            noFriendsAvailableToast();
         }
 
     }
 
-    private void noFriendsAvailableNotification(){
+    private void noFriendsAvailableToast(){
         Log.i(TAG,"Notifying user abut no friend locations available");
+
+        Context context = getApplicationContext();
+        CharSequence text = "No friends found nearby";
+        int duration = Toast.LENGTH_SHORT;
+
+        Toast toast = Toast.makeText(context, text, duration);
+        toast.show();
         //TODO: small notification
     }
 }

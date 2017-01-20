@@ -30,6 +30,10 @@ import java.security.Permission;
 import javax.net.ssl.HttpsURLConnection;
 
 /**
+ * @author peterbencik
+ */
+
+/**
  * An {@link IntentService} subclass for handling asynchronous task requests in
  * a service on a separate handler thread.
  * <p>
