@@ -13,6 +13,7 @@ import android.os.Bundle;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.content.LocalBroadcastManager;
+import android.util.Log;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -40,6 +41,9 @@ import javax.net.ssl.HttpsURLConnection;
  * helper methods.
  */
 public class GpsPullService extends IntentService {
+
+    //logging
+    private static final String TAG = "MapsActivity";
 
     //constants for status report
     public static final String STATUS_REPORT_ACTION = "de.htwg_konstanz.moco.meetable.action.STATUS_REPORT_ACTION";
@@ -115,7 +119,7 @@ public class GpsPullService extends IntentService {
      * @see IntentService
      */
     public static void startActionGetLocation(Context context) {
-        System.out.println("Inside helper method");
+        Log.d(TAG,"Inside helper method");
         Intent intent = new Intent(context, GpsPullService.class);
         intent.setAction(ACTION_GET_LOCATION);
         context.startService(intent);
@@ -124,7 +128,7 @@ public class GpsPullService extends IntentService {
 
     @Override
     protected void onHandleIntent(Intent intent) {
-        System.out.println("Inside service");
+        Log.d(TAG,"Inside service");
         if (intent != null) {
             final String action = intent.getAction();
             if (ACTION_GET_LOCATION.equals(action)) {
@@ -155,6 +159,7 @@ public class GpsPullService extends IntentService {
 
     private void determineMyPosition() {
 
+        Log.d(TAG,"determining my own position");
         LocationManager locationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
 
         //permission check
@@ -178,8 +183,10 @@ public class GpsPullService extends IntentService {
     }
 
     private String accessDatabase() {
+        Log.d(TAG,"accessing database");
         URL accessUrl = composeDatabaseAccessUrl();
         try{
+            Log.d(TAG,"Opening https connection");
             HttpsURLConnection urlConnection = (HttpsURLConnection) accessUrl.openConnection();
             InputStream inputStream = urlConnection.getInputStream();
             BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
@@ -197,6 +204,7 @@ public class GpsPullService extends IntentService {
     }
 
     private URL composeDatabaseAccessUrl(){
+        Log.d(TAG, "Composing rest url");
         String url = DATABASE_ACCESS +
                     DATABASE_GET_LOCATION_METHOD +
                     "/" + myPosition.getLatitude() +
@@ -210,6 +218,7 @@ public class GpsPullService extends IntentService {
     }
 
     private void parseJson(String jsonString) throws JSONException {
+        Log.d(TAG,"Parsing Json string");
         JSONArray array = new JSONArray(jsonString);
         JSONArray internalArray = array.getJSONArray(0);
         JSONObject object = internalArray.getJSONObject(0);
@@ -228,12 +237,12 @@ public class GpsPullService extends IntentService {
         localIntent.putExtra(STATUS_REPORT_LATITUDE, myPosition.getLatitude());
         localIntent.putExtra(STATUS_REPORT_LONGITUDE, myPosition.getLongitude());
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-        System.out.println("Lat:" + otherPhonePosition.getLatitude() + "\nLon: " + otherPhonePosition.getLongitude());
+        Log.i(TAG,"Reporting position: Lat:" + otherPhonePosition.getLatitude() + "\nLon: " + otherPhonePosition.getLongitude());
     }
 
     private void reportFail(){
         Intent localIntent = new Intent(STATUS_REPORT_ACTION_FAIL);
         LocalBroadcastManager.getInstance(this).sendBroadcast(localIntent);
-        System.out.println(STATUS_REPORT_ACTION_FAIL + ": Getlocation failed");
+        Log.w(TAG,STATUS_REPORT_ACTION_FAIL + ": Getlocation failed");
     }
 }
