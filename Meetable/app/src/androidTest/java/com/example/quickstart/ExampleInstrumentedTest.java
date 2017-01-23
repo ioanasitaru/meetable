@@ -1,4 +1,4 @@
-package de.htwg_konstanz.moco.meetable;
+package com.example.quickstart;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;
@@ -21,6 +21,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("de.htwg_konstanz.moco.meetable", appContext.getPackageName());
+        assertEquals("com.example.quickstart", appContext.getPackageName());
     }
 }

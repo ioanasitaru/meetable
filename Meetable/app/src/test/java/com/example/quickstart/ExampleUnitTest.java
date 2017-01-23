@@ -1,4 +1,4 @@
-package de.htwg_konstanz.moco.meetable;
+package com.example.quickstart;
 
 import org.junit.Test;
 
