@@ -134,6 +134,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         startGpsNeighboursLookup();
     }
 
+    public void initiateChat(View view){
+        Intent intent = new Intent(getApplicationContext(),ChatActivity.class);
+        startActivity(intent);
+    }
+
     private void startGpsNeighboursLookup(){
         Log.d(TAG,"Firing up GpsPullService");
         try{
@@ -164,6 +169,5 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         Toast toast = Toast.makeText(context, text, duration);
         toast.show();
-        //TODO: small notification
     }
 }
